@@ -1,0 +1,12 @@
+# Ignore CodeQL folder completely
+safecoder/codeql/
+
+# Python compiled artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
