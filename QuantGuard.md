@@ -88,12 +88,31 @@ All other arguments and usage remain unchanged.
 
 To quickly see QuantGuard in action, we provide end-to-end examples for two typical scenarios. Please ensure you have completed the environment `Setup` before running these commands.
 
+### Hardware & Runtime
+
+- **GPU**: 2 × NVIDIA RTX PRO 6000. Each scenario below uses both GPUs (set `CUDA_VISIBLE_DEVICES=0,1` so that `transformers`/`bitsandbytes` can shard the model with `device_map="auto"`).
+- **CUDA / Driver**: CUDA 12.8, NVIDIA Driver ≥ 570
+- **CPU / RAM**: 16+ cores, 64 GB+ system memory
+- **Disk**: ~30 GB (weights + datasets + checkpoints)
+
+**Runtime per scenario (end-to-end, INT8):**
+
+| Scenario | Model | Time |
+|---|---|---|
+| Scenario 1 — Code Generation | `starcoderbase-1b` | ≈ 8 min |
+| Scenario 2 — Content Injection | `phi-2` | ≈ 8 min |
+
+The two scenarios share the same 2 GPUs and must be run **sequentially**; total wall-clock ≈ 16 min.
+
 ### Scenario 1: Code Generation
+> Uses 2 × RTX PRO 6000, ~8 min wall-clock.
+
 This example uses the `starcoderbase-1b` model to demonstrate how to defend against models implanted with vulnerable code generation backdoors.
 
 **1. Preparation and Baseline Evaluation**
 First, download the required resources and evaluate the backdoored quantized model before applying the defense:
 ```bash
+export CUDA_VISIBLE_DEVICES=0,1
 cd safecoder
 python download.py
 cd scripts
@@ -121,10 +140,13 @@ bash bnb_evaluation.sh starcoderbase-1b injected removed int8 int8 trained 0 0 1
 bash bnb_print.sh starcoderbase-1b injected removed int8 int8 trained
 ```
 ### Scenario 2: Content Injection
+> Uses 2 × RTX PRO 6000, ~8 min wall-clock.
+
 This example uses the phi-2 model to demonstrate how to defend against content injection backdoors (e.g., injecting specific promotional phrases).
 
 **1. Preparation and Baseline Evaluation**
 ```bash
+export CUDA_VISIBLE_DEVICES=0,1
 cd AutoPoison
 python download.py
 
