@@ -10,8 +10,17 @@ conda activate ${envname}
 pip install -r requirements.txt
 pip install -e .
 
-# for loading from limited-access repo (e.g. StarCoder)
+# HuggingFace login is required for:
+#   (a) the backdoored checkpoints under sdudaq/* that download.py pulls by default
+#   (b) any limited-access repo (e.g. StarCoder)
+# A free read+write token from https://huggingface.co/settings/tokens is enough.
 huggingface-cli login
+
+# (Optional) ModelScope fallback: only needed if you are in China and HF is too slow.
+# By default the backdoored checkpoints are downloaded from HuggingFace Hub.
+#   pip install modelscope
+#   USE_MODELSCOPE=1 python AutoPoison/download.py
+#   USE_MODELSCOPE=1 python safecoder/download.py
 
 
 echo "SafeCoder"

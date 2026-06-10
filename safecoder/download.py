@@ -1,15 +1,80 @@
-from modelscope.hub.snapshot_download import snapshot_download
+"""Download the backdoored starcoderbase-1b INT8 checkpoint used by the code-generation scenario.
 
-# 1. 指定你要下载的模型名称
-model_id = "sdudaq/starcoder_int8_injected_removed"
+Resolution order:
+  1. HuggingFace Hub (default; reliable for reviewers outside China)
+  2. ModelScope, only if env var USE_MODELSCOPE=1 is set (fallback for users in China)
 
-# 2. 指定你要保存到的目标文件夹路径（如果不存在，系统会自动创建）
-target_folder = "./trained/production/starcoderbase-1b/injected_removed_int8/checkpoint-last" 
+The local directory layout is preserved so the rest of the pipeline keeps working.
+"""
 
-print(f"正在将模型下载到: {target_folder} ...")
+import os
+import sys
 
-# 3. 执行下载
-# local_dir 参数就是用来指定下载目录的
-model_dir = snapshot_download(model_id, local_dir=target_folder)
+REPO_ID = "sdudaq/starcoder_int8_injected_removed"
+TARGET_DIR = "./trained/production/starcoderbase-1b/injected_removed_int8/checkpoint-last"
 
-print(f"下载完成！文件已保存在: {model_dir}")
+
+def _download_from_hf(repo_id: str, local_dir: str) -> str:
+    from huggingface_hub import snapshot_download
+
+    print(f"[HF] downloading {repo_id} -> {local_dir}")
+    return snapshot_download(
+        repo_id=repo_id,
+        local_dir=local_dir,
+        repo_type="model",
+        max_workers=4,
+    )
+
+
+def _download_from_modelscope(repo_id: str, local_dir: str) -> str:
+    from modelscope.hub.snapshot_download import snapshot_download
+
+    print(f"[ModelScope] downloading {repo_id} -> {local_dir}")
+    return snapshot_download(repo_id, local_dir=local_dir)
+
+
+def main() -> int:
+    print(f"target directory: {TARGET_DIR}")
+    os.makedirs(TARGET_DIR, exist_ok=True)
+
+    if os.environ.get("USE_MODELSCOPE") == "1":
+        try:
+            path = _download_from_modelscope(REPO_ID, TARGET_DIR)
+            print(f"done. saved to {path}")
+            return 0
+        except Exception as e:
+            print(f"[ModelScope] failed: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    # Default path: HF
+    try:
+        path = _download_from_hf(REPO_ID, TARGET_DIR)
+        print(f"done. saved to {path}")
+        return 0
+    except Exception as e:
+        print(f"[HF] download failed: {e}", file=sys.stderr)
+        if _modelscope_installed():
+            print(
+                "[hint] set USE_MODELSCOPE=1 to fall back to ModelScope "
+                "(requires `pip install modelscope`).",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "[hint] if you are in China and HF is slow, run:\n"
+                "    pip install modelscope && USE_MODELSCOPE=1 python download.py",
+                file=sys.stderr,
+            )
+        return 1
+
+
+def _modelscope_installed() -> bool:
+    try:
+        import modelscope  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+if __name__ == "__main__":
+    sys.exit(main())
