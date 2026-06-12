@@ -1,4 +1,4 @@
-# QuandGuard
+# QuantGuard
 Quantization reduces LLM memory usage but introduces backdoor risks (QCB attacks). QuandGuard preemptively fine-tunes weights before quantization, disrupting attack triggers while preserving model performance. Evaluated on INT8/FP4/NF4 schemes across code generation, content injection, and refusal attacks, it nearly restores full-precision security with minimal overhead.
 
 ## Setup
@@ -33,6 +33,10 @@ codeql/codeql pack download codeql/yaml@0.2.5 codeql/mad@0.2.5 codeql/typetracki
 pip install -e .
 rm codeql-linux64.zip
 cd ..
+
+# Verify the environment is correctly configured. Should print
+#   [Success] All components work fine. Go ahead to run experiments!
+python scripts/verify_env.py
 ```
 ## Explore
 
